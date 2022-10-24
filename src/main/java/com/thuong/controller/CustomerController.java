@@ -1,32 +1,30 @@
 package com.thuong.controller;
 
 import com.thuong.model.Customer;
-import com.thuong.service.ICustomerService;
+import com.thuong.model.Province;
+import com.thuong.service.customer.ICustomerService;
+import com.thuong.service.province.IProvinceService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.util.List;
 import java.util.Optional;
 
 @Controller
 public class CustomerController {
-
     @Autowired
     private ICustomerService customerService;
 
-//    @Autowired
-//    private IProvinceService provinceService;
-//
-//    @ModelAttribute("provinces")
-//    public Iterable<Province> provinces(){
-//        return provinceService.findAll();
-//    }
+    @Autowired
+    private IProvinceService provinceService;
+
+    @ModelAttribute("provinces")
+    public Iterable<Province> provinces(){
+        return provinceService.findAll();
+    }
 
 
     @GetMapping("/create-customer")
@@ -46,8 +44,13 @@ public class CustomerController {
     }
 
     @GetMapping("/customers")
-    public ModelAndView listCustomers() {
-        Iterable<Customer> customers = customerService.findAll();
+    public ModelAndView listCustomers(@RequestParam("search") Optional<String> search, Pageable pageable){
+        Page<Customer> customers;
+        if(search.isPresent()){
+            customers = customerService.findAllByFirstNameContaining(search.get(), pageable);
+        } else {
+            customers = customerService.findAll(pageable);
+        }
         ModelAndView modelAndView = new ModelAndView("/customer/list");
         modelAndView.addObject("customers", customers);
         return modelAndView;
